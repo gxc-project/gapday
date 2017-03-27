@@ -60,8 +60,12 @@
 }
 .map-wrap .map-all {
   width: 100%;
-  position: relative;
-  background: #191434;
+  position: absolute;
+  top: 44px;
+  left: 0;
+  background: url("../images/bg.jpg") no-repeat;
+  -webkit-background-size: 100% 100%;
+  background-size: 100% 100%;
 }
 .map-wrap .map-all img {
   position: absolute;

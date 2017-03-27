@@ -109,7 +109,6 @@ var FM = {
             $('.divbutton').css('display','none');
             $('#shareMapPageDiv').css('display','block');
             if(FM.level == 'city'){//市级页面
-                $("#footmarktimeline").css('display','none');
                 $('#province').css('display','block');
                 $('#changeicon').css('display','block');
                 FM.mapRegion.options.stateShowAll = true;
@@ -134,7 +133,6 @@ var FM = {
         $('#cn_merc').css('display','none');
         $('#world_merc').css('display','none');
         $('#city').css('display','none');
-        $('.lightdiv').css('display','none');
         $('.divbutton').css('display','none');
         $('#changeicon').css('display','block');
         $(FM.jSelectEle).attr('fill','#DBD9DA');
@@ -142,7 +140,6 @@ var FM = {
 
         /*debugger;*/
         if(FM.level == 'world'){
-
             $('#world_merc').css('display','block');
             $('#changeicon').attr('src',ctx+'/pages/footmark/resource/common/images/china.png');
             var eleLen = $("div#world_merc > .jvectormap-container").length;
@@ -270,16 +267,12 @@ var FM = {
                 }
             });
             FM.mapRegion = mapRegion;
-            /*$("div#province").panzoom({
-             minScale: 1,
-             maxScale: 5
-             });*/
+
         }
         FM.currentLevel = 'province';
         $('.jvectormap').css('display','none');
         $('#cn_merc').css('display','none');
         $('#world_merc').css('display','none');
-        $('.lightdiv').css('display','none');
         $('#changeicon').attr('src',ctx+'/pages/footmark/resource/common/images/china.png');
         FM.changeHistoryFootmarkMapColor();
 

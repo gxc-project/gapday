@@ -99,6 +99,7 @@
 
         $(function () {
             FM.init();    //足迹地图初始化
+            $('.map-all').height($(window).height() - 44);
         });
 
     </script>
@@ -118,7 +119,6 @@
         <div class="map-middle">中国</div>
     </div>
     <div class="map-all">
-        <img src="images/bg.jpg" alt="">
         <div class="map-text">7个城市</div>
     </div>
 
@@ -139,9 +139,6 @@
 <script type="text/javascript" src="resource/jvectormap/jquery-jvectormap-cn-merc.min.js"></script>
 
 <script type="text/javascript" src="resource/common/js/map.js?v=1.0.21"></script>
-<script type="text/javascript" src="resource/html2canvas/canvg.min.js?v=1.0.0"></script>
-<script type="text/javascript" src="resource/html2canvas/html2canvas.min.js?v=1.0.3"></script>
 <script type="text/javascript" src="resource/common/js/dropload.min.js"></script>
-<script type="text/javascript" src="resource/mapbox/mapbox-v2.4.0.min.js"></script>
 </body>
 </html>
