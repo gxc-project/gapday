@@ -271,294 +271,6 @@ var FM = {
         }
     },
 
-    //点亮手机相册的历史足迹  处理  (读手机相册  点亮历史足迹——步骤1)
-    lightHistoryFootmarkFromPhoto:function(countryName,provinceName,cityName){
-        var length = FM.historyFootmark.length;  //历史点亮的足迹
-        var isContain = false;
-        if((!cityName || cityName =='') && provinceName){
-            cityName = provinceName;
-        }
-
-        //判断在字典表中是否存在 该地址
-        var aj = $.ajax({
-            url:ctx+"/app/footmark/mapdict/getMapDict.do",
-            data:{
-                country : countryName,
-                province : provinceName,
-                city : cityName
-            },
-            type:'get',
-            dataType:'json',
-            success:function(result) {
-                if(result.success){
-                    var length = result.data.length;
-                    if(length > 0){
-                        var dictFull = {countryname:countryName,provincename:provinceName,cityname:cityName};
-                        for(var i=0;i<length;i++){
-                            var dict = result.data[i];
-                            var dataCode = dict.dataCode;
-                            var dataName = dict.dataName;
-                            var level = dict.level;
-                            if(level == 1){
-                                dictFull.countryname = dataName;
-                                dictFull.country  = dataCode;
-                            }else if(level == 2){
-                                dictFull.provincename = dataName;
-                                dictFull.province  = dataCode;
-                            }else if(level == 3){
-                                dictFull.cityname = dataName;
-                                dictFull.city  = dataCode;
-                            }
-                        }
-                        if(!dictFull.country){//如果国家为空
-                            FM.tipMask();
-                            FM.tipMask('未知的地区：'+countryName+provinceName+cityName+'!国家在字典中不存在。',false);
-                            return;
-                        }
-                        if(dictFull.country != 'CN'){//不是中国的，只保存国家名称
-                            dictFull.province='';
-                            dictFull.provincename='';
-                            dictFull.city='';
-                            dictFull.cityname='';
-                        }
-
-                        //对特殊地区处理
-                        //alert("dictFull.province="+dictFull.province);
-                        if(dictFull.province == 'aomen' || dictFull.province == 'taiwan' || dictFull.province == 'xianggang'
-                            || dictFull.province == 'beijing'|| dictFull.province == 'shanghai'|| dictFull.province == 'tianjin'|| dictFull.province == 'chongqing'){
-                            dictFull.city = dictFull.province;
-                            dictFull.cityname = dictFull.provincename;
-                        }
-                        if(dictFull.country == 'CN' && (!dictFull.city || dictFull.city == '')){
-                            FM.tipMask();
-                            FM.tipMask('未知的地区：'+countryName+provinceName+cityName+'!',false);
-                            return;
-                        }
-
-                        //判断该地区是否点亮过
-                        length = FM.historyFootmark.length;
-                        if(length>0){
-                            for(var i=0;i<length;i++){
-                                var obj = FM.historyFootmark[i];
-                                var country = obj.country;
-                                if(country == 'CN'){   //中国
-                                    if((obj.countryname==dictFull.countryname && obj.provincename==dictFull.provincename) && (obj.cityname==dictFull.cityname || obj.cityname == dictFull.provincename)){
-                                        isContain = true;    //点亮过
-                                        break;
-                                    }
-                                }else{  //外国
-                                    if(obj.countryname == dictFull.countryname){
-                                        isContain = true;
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-
-                        if(!isContain){ //未点亮过，保存
-                            FM.changeHistoryFootmarkMapColor();
-                            FM.savePhotoFootmark(dictFull);   //读手机相册  点亮历史足迹——步骤2
-                        }else{
-                            var country_city = "";
-                            if(dictFull.cityname){
-                                country_city = dictFull.cityname;
-                            }else if(dictFull.countryname){
-                                country_city = dictFull.countryname;
-                            }
-                            //FM.tipMask();
-                            //FM.tipMask('您已经点亮过'+country_city+'了!无需重复点亮。',false);
-                        }
-                    }
-                }
-            },
-            error : function(data) {
-            }
-        });
-    },
-
-    //保存过往足迹 保存处理     (读手机相册  点亮历史足迹——步骤2  保存数据处理)
-    savePhotoFootmark:function(obj){
-        var aj = $.ajax({
-            url:ctx+"/app/footmark/footmark/saveFootmark.do",
-            data:{
-                userid : userid,
-                country : obj.country,
-                province : obj.province,
-                city : obj.city,
-                countryname : obj.countryname,
-                provincename : obj.provincename,
-                cityname : obj.cityname,
-                citycode : '',
-                type:'photo',
-                deviceType : deviceType
-            },
-            type:'post',
-            dataType:'json',
-            success:function(result) {
-                var country_city = "";
-                if(obj.cityname){
-                    country_city = obj.cityname;
-                }else if(obj.countryname){
-                    country_city = obj.countryname;
-                }
-                if(result.success){
-                    if(result.code == '100'){
-                        //var notify = result.msg.replace(/\|/g,"");
-                        //notificationLightHistoryFootmark('已为您点亮'+country_city+'!');
-                        FM.tipMask();
-                        FM.tipMask('已为您点亮'+country_city+'!',true);
-                        FM.historyFootmark.push(obj);
-                    }else{
-                        //notificationLightHistoryFootmark('您已经点亮'+country_city+'啦!');
-
-                        // 不提示算了
-                        //FM.tipMask();
-                        //FM.tipMask('您已经点亮过'+country_city+'了!无需重复点亮。',false);
-                        //$(".tipMask").hide();
-                    }
-                    FM.isLightHistoryFootmark = true;
-                    if(obj.countryname == FM.currentCountryName && ((FM.currentCityName == obj.cityname || FM.currentProvinceName == obj.cityname) ||
-                        (obj.cityname == '' && obj.porvincename == ''))){
-                        FM.isLight = true;
-                    }
-                }else{
-                    FM.tipMask();
-                    FM.tipMask(country_city+'点亮失败啦!',false);
-                }
-            },
-            error : function(data) {
-                FM.tipMask();
-                FM.tipMask(country_city+'点亮失败啦!',false);
-            }
-        });
-    },
-
-    //保存足迹(手动点亮 足迹)
-    saveFootMark:function(param){
-        // 创建地点，则可以补点亮足迹
-        if(param != 'undefined' && param != null){  //改变当前地点为选择的地点
-            FM.currentCountry = param.country;
-            FM.currentProvince = param.province;
-            FM.currentCity = param.city;
-            FM.currentCountryName = param.countryName;
-            FM.currentProvinceName =  param.provinceName;
-            FM.currentCityName = param.cityName;
-        }
-
-        if(!FM.isLight){
-            var aj = $.ajax({
-                url: ctx+"/app/footmark/footmark/saveFootmark.do",
-                data: {
-                    userid : userid,
-                    country : FM.currentCountry,
-                    province : FM.currentProvince,
-                    city : FM.currentCity,
-                    countryname : FM.currentCountryName,
-                    provincename : FM.currentProvinceName,
-                    cityname : FM.currentCityName,
-                    citycode : '',
-                    deviceType : deviceType
-                },
-                type:'post',
-                dataType:'json',
-                success:function(result) {
-                    debugger;
-                    if(result.success){
-                        var country_city = "";
-                        if(FM.level == 'country'){
-                            country_city = FM.currentCountryName;
-                        }else if(FM.level == 'city'){
-                            country_city = FM.currentCityName;
-                        }
-                        if(result.code == '102'){//已点亮过
-                            var length = FM.lightedCountryCityMsg.length;
-                            if(length>0){
-                                for(var i = 0;i<length;i++){
-                                    var msg = FM.lightedCountryCityMsg[i];
-                                    var msgs = msg.split(':');
-                                    if(msgs[0] == country_city){
-                                        result.msg = msgs[1];
-                                    }
-                                }
-                            }
-                        }else{
-                            FM.historyFootmark.push({
-                                country : FM.currentCountry,
-                                province : FM.currentProvince,
-                                city : FM.currentCity,
-                                countryname : FM.currentCountryName,
-                                provincename : FM.currentProvinceName,
-                                cityname : FM.currentCityName,
-                                citycode : ''
-                            });
-                            FM.lightedCountryCityMsg.push(country_city+':'+result.msg);
-                        }
-//			    		var notify = result.msg.replace(/\|/g,"");
-                        var msg = result.msg.split('|');//倾世等一人|2016年|1月16日|点亮|中国大理白族自治州|。已经有|1|个人在大理白族自治州留下足迹
-                        var nickname = msg[0]?msg[0]:'';
-                        var year = msg[1]?msg[1]:'';
-                        var daymouth = msg[2]?msg[2]:'';
-                        var content = msg[3]?msg[3]:'';
-                        var location = msg[4]?msg[4]:'';
-                        var content1 = msg[5]?msg[5]:'';
-                        var ranknum = msg[6]?msg[6]:'';
-                        var content2 = msg[7]?msg[7]:'';
-                        $('#shareCardText').html(
-                            '<div class="card_title">'
-                            + nickname
-                            + '</div><div><span class="card_content">'
-                            + year+daymouth+content
-                            + '</span><span class="card_location">'
-                            + location
-                            + '</span><br/><span class="card_content">'
-                            + content1
-                            + '</span><span class="card_location">'
-                            + ranknum
-                            + '</span><span class="card_content">'
-                            + content2
-                            + '</span></div>');
-                        FM.lightedCountryCity = country_city;
-                        clearInterval(FM.interval);
-                        $('#lightbutton').attr('src',ctx+'/pages/footmark/resource/common/images/lighting_2.png?v=1.0.0');
-                        $(FM.jSelectEle).attr('fill','#F2CA46');
-                        FM.isLight = true;
-                        $("#shareCardDiv").css('display','block');
-
-                        //$("#tipText").text('成功点亮'+country_city+'!');
-                        //FM.tipMask();
-
-
-                        //点亮成功 之后,加载mapbox展示
-                        //按照点亮的城市展示   V3.x 版本展示 POI 地址内容
-                        POIFM.footmark.push({    //当前点亮的足迹
-                            city : FM.currentCityName,
-                            date : year+daymouth
-                        });
-
-                        POIFM.currentCountryName = FM.currentCountryName;
-                        POIFM.currentCityName = FM.currentCityName;
-                        POIFM.loadData();
-
-                        //notificationLightHistoryFootmark('成功点亮'+country_city+'!');
-                    }else{
-                        FM.tipMask();
-                        FM.tipMask(result.msg,false);
-                        //notificationLightHistoryFootmark(result.msg);
-                    }
-                },
-                error : function(result) {
-                    FM.tipMask();
-                    FM.tipMask('点亮失败',false);
-                    //notificationLightHistoryFootmark('点亮失败');
-                }
-            });
-        }else{
-            FM.tipMask();
-            FM.tipMask('您已成功点亮'+FM.lightedCountryCity+'哦!',false);
-            //notificationLightHistoryFootmark('您已成功点亮'+FM.lightedCountryCity+'哦!');
-        }
-    },
-
     //返回
     goBack:function(){
         FM.isLight = false;
@@ -566,43 +278,7 @@ var FM = {
         var province = FM.selectRegion['province'];
         var city = FM.selectRegion['city'];
 
-        if(FM.currentLevel == 'footmarkleeflist'){//足迹列表页面
-            $('#footmarkleeflists').css('display','none');
-            $('#footmarkleeflists_background').css('display','none');
-            $('#myleef').css('display','block');
-            $('#shareMapPageDiv').css('display','block');
-            FM.currentLevel = 'messagetree';
-            LFM.isLeefList = false;
-        }else if(FM.currentLevel == 'messagetree'){//留言树页面
-            $('.messageCard').css('display','none');
-            $('.messagetree_div').css('display','none');
-
-            $('#shareMapPageDiv').css('display','block');  //分享按钮
-            //返回是mapbox这一层的话，分享按钮隐藏、风筝按钮显示
-            if(POIFM.map){
-                $("#poiSummaryNumDiv").css('display','block');
-                $("#createPoiAddressDiv").css('display','block');  //创建poi 地点
-                $('#shareMapPageDiv').css('display','none');
-            }
-
-            if(FM.level == 'china' && (province == 'aomen' || province == 'taiwan' || province == 'xianggang'
-                || province == 'beijing'|| province == 'shanghai'|| province == 'tianjin'|| province == 'chongqing')){
-                FM.currentLevel = 'specialarea';//在港澳台或四个直辖市级别操作的
-            }else if(!country){
-                FM.currentLevel = 'world';//在首页操作的
-            }else if(FM.level == 'country' && (!province || province == '') && (!city || city == '')){
-                FM.currentLevel = 'country';//在除中国外的其他国家级别操作的
-            }else if(FM.level == 'world' && country == 'CN' && (!province || province == '') && (!city || city == '')){
-                FM.currentLevel = 'china';//在中国
-            }else if(FM.level == 'china' && country == 'CN' && province && (!city || city == '')){
-                FM.currentLevel = 'province';//在省级操作
-            }else if(FM.level == 'city' && country == 'CN' && province && city){
-                FM.currentLevel = 'city';//在市级操作
-            }
-            LFM.removeShakeEvent();
-            $('.openmessagetree').css('display','block');
-            clearInterval(LFM.interval);
-        }else if(FM.currentLevel == 'world'){//首页
+        if(FM.currentLevel == 'world'){//首页
             goBackToHomePage();
         }else{
             $('.divbutton').css('display','none');
@@ -611,40 +287,15 @@ var FM = {
                 $("#footmarktimeline").css('display','none');
                 $('#province').css('display','block');
                 $('#changeicon').css('display','block');
-
-                //mapbox 图层处理（返回时，移除图层）
-                if(POIFM.map){
-                    POIFM.map.remove();
-                    POIFM.map = null;
-                    POIFM.map_popup = null;
-                }
-                $("#poiMapBox").css('display','none');  //隐藏掉mapbox
-                $("#poiSummaryNumDiv").css('display','none');
-                $("#createPoiAddressDiv").css('display','none');  //创建poi 地点
-                $("#poiMapBox").html('');
-
-                //重置省级地图位置
-                //$('#province').css('visibility','hidden');
                 FM.mapRegion.options.stateShowAll = true;
                 FM.mapRegion.options.stateShowList=[];
                 FM.mapRegion.render();
                 FM.currentLevel = 'province';
                 FM.level = 'china';
-                $('.lightdiv').css('display','none');
-                if(isself=='1'){
-                    $('.operatordiv_3').css('display','block');
-                }
-//	           	$('.messagetree').css('display','none');
-                $("#shareCardDiv").css('display','none');
                 $(FM.jSelectEle).attr('fill','#DBD9DA');
                 FM.changeHistoryFootmarkMapColor();
-                $('#headtitle').text(FM.selectRegionName);
-                /*setTimeout(function(){
-                 var svg = $('#province > .svggroup > svg');
-                 var viewbox = FM.mapTransformPosition['province_'+FM.currentOperProvince];
-                 svg[0].attributes['viewBox'].value = viewbox;
-                 $('#province').css('visibility','visible');
-                 },100);*/
+                $('.map-middle').text(FM.selectRegionName);
+
                 FM.selectRegion['city'] = null;
             }else{
                 FM.changeMap();
@@ -683,12 +334,7 @@ var FM = {
                         initial: {
                             fill: '#DBD9DA'
                         }
-                    }/*,
-                     onRegionSelected:function(e, code, isSelected, selectedRegions){
-                     if(FM.isLight && FM.level == 'country'){//当点亮地图时，再点击会变回初始颜色
-                     FM.isLight = false;
-                     }
-                     }*/
+                    }
                 });
                 /*var position = $('#world_merc > .jvectormap-container > svg > g')[0];
                  position = $(position).attr('transform');
@@ -699,7 +345,6 @@ var FM = {
             }
             FM.level = 'china';
             FM.currentLevel = 'world';
-            $('#footmarkListShowDiv').css('display','block');
         }else if(FM.level == 'china' || FM.level == 'city'){
             if(FM.level == 'city'){
                 //重置省级地图
@@ -738,13 +383,6 @@ var FM = {
             FM.currentLevel = 'china';
             $('#footmarkListShowDiv').css('display','none');
         }else if(FM.level == 'country'){
-            if(isself=='1'){
-                $('.operatordiv_1').css('display','block');
-            }
-            if(isShare == 1){  //分享H5页面，点亮过往按钮显示
-                $('#lighthistoryfootmark').css('display','block');
-            }
-
             $('#world_merc').css('display','block');
             FM.level = 'china';
             var preEle = $(FM.jSelectEle).prevAll();
@@ -754,6 +392,8 @@ var FM = {
             $('#changeicon').attr('src',ctx+'/pages/footmark/resource/common/images/china.png');
             FM.currentLevel = 'world';
             $('#footmarkListShowDiv').css('display','none');
+        }else if(FM.level == FM.currentLevel && FM.level == 'city'){
+
         }
         FM.changeHistoryFootmarkMapColor();
         if(FM.currentLevel == 'world' && FM.jMap){
@@ -767,17 +407,6 @@ var FM = {
         FM.selectRegion['city'] = null;
         FM.selectRegion['province'] = null;
     },
-
-    //点亮足迹按钮闪烁
-    changeLightButton:function(){
-        if(FM.lightIcon==1){
-            FM.lightIcon = 2;
-        }else{
-            FM.lightIcon = 1;
-        }
-        $('#lightbutton').attr('src',ctx+'/pages/footmark/resource/common/images/lighting_'+FM.lightIcon+'.png?v=1.0.0');
-    },
-
 
     //点击市级别的地图
     cityClickCallback:function(obj){
@@ -793,13 +422,6 @@ var FM = {
             clearInterval(FM.interval);
             $(FM.jSelectEle).attr('fill','#DBD9DA');
             $('.divbutton').css('display','none');
-            if(isself=='1'){
-                // alert("cityClickCallback");
-                $('.operatordiv_2').css('display','block');
-                $('.messagetree').css('display','block');
-                FM.interval = setInterval("FM.changeLightButton()",500);
-                $('.lightdiv').css('display','block');
-            }
             FM.mapRegion.panZoom.zoomIn(3);//地图放大三倍
         });
 
@@ -827,9 +449,6 @@ var FM = {
                 stateShowAll:true,
                 stateShowList:[],
                 clickColorChange: true,
-                /*hoverCallback: function (stateData, obj) {
-                 FM.forwardToHistoryFootmark(obj);
-                 },*/
                 unClickCallback: function(stateData, obj){//取消事件
                     FM.cityClickCallback(obj);
                 },
@@ -926,14 +545,7 @@ var FM = {
                     $('#cn_merc').vectorMap('set', 'focus', datacode);//重新渲染居中
                     FM.currentLevel = 'specialarea';
                     $('.divbutton').css('display','none');
-                    if(isself=='1'){
-                        //alert("clickCallback1");
-                        $('.lightdiv').css('display','block');
-                        $('.operatordiv_2').css('display','block');
-                        $('.messagetree').css('display','block');
-                        clearInterval(FM.interval);
-                        FM.interval = setInterval("FM.changeLightButton()",500);
-                    }
+
                 }else{
                     var version = '';
                     if(datacode=='hubei'){//湖北地图文件襄樊市改为襄阳市
@@ -957,14 +569,6 @@ var FM = {
                 FM.currentLevel = FM.level;
                 $('#changeicon').attr('src',ctx+'/pages/footmark/resource/common/images/world.png');
                 $('.divbutton').css('display','none');
-                if(isself=='1'){
-                    //alert("clickCallback2");
-                    $('.operatordiv_2').css('display','block');
-                    $('.messagetree').css('display','block');
-                    $('.lightdiv').css('display','block');
-                    clearInterval(FM.interval);
-                    FM.interval = setInterval("FM.changeLightButton()",500);
-                }
 
                 $("#poiSummaryNumDiv").css({'display':'none'}); //mapbox中pop 弹窗 隐藏
                 $("#createPoiAddressDiv").css('display','none');  //创建poi 地点
