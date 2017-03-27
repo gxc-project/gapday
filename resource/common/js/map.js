@@ -260,7 +260,7 @@ var FM = {
                 $("[data-code='"+province+"']").attr('fill','#F2CA46');
                 $("[data-code='"+city+"']").attr('fill','#F2CA46');
                 if(footmark.countryname == FM.currentCountryName && ((FM.currentCityName == footmark.cityname || FM.currentProvinceName == footmark.cityname) ||
-                    (footmark.cityname == '' && footmark.porvincename == ''))){
+                    (footmark.cityname == '' && footmark.provincename == ''))){
                     isLight = true;
                 }
             }
@@ -661,7 +661,7 @@ var FM = {
         $('.lightdiv').css('display','none');
         $('.divbutton').css('display','none');
         $('#changeicon').css('display','block');
-        $(FM.jSelectEle).attr('fill','#070a1b');
+        $(FM.jSelectEle).attr('fill','#DBD9DA');
         FM.isLight = false;
         clearInterval(FM.interval);
 
@@ -681,7 +681,7 @@ var FM = {
                     regionsSelectable:true,
                     regionStyle: {
                         initial: {
-                            fill: '#070a1b'
+                            fill: '#DBD9DA'
                         }
                     }/*,
                      onRegionSelected:function(e, code, isSelected, selectedRegions){
@@ -721,13 +721,10 @@ var FM = {
                     backgroundColor: 'transparent',
                     regionStyle: {
                         initial: {
-                            fill: '#070a1b'
+                            fill: '#DBD9DA'
                         }
                     }
                 });
-                /*var position = $('#cn_merc > .jvectormap-container > svg > g')[0];
-                 position = $(position).attr('transform');
-                 FM.mapTransformPosition['china'] = position;*/
                 var container = $('#cn_merc > .jvectormap-container')[0];
                 $(container).height(FM.height);
                 $(container).width(FM.width);
@@ -754,7 +751,6 @@ var FM = {
             var nextEle = $(FM.jSelectEle).nextAll();
             $(preEle).show();
             $(nextEle).show();
-            //FM.jMap.bindContainerTouchEvents();//开启触屏操作事件
             $('#changeicon').attr('src',ctx+'/pages/footmark/resource/common/images/china.png');
             FM.currentLevel = 'world';
             $('#footmarkListShowDiv').css('display','none');
@@ -762,11 +758,11 @@ var FM = {
         FM.changeHistoryFootmarkMapColor();
         if(FM.currentLevel == 'world' && FM.jMap){
             FM.jMap.reset();//重置地图
-            $('#headtitle').text('世界');
+            $('.map-middle').text('世界');
             FM.selectRegion['country'] = null;
         }else if(FM.currentLevel == 'china' && FM.jCNMap){
             FM.jCNMap.reset();
-            $('#headtitle').text('中国');
+            $('.map-middle').text('中国');
         }
         FM.selectRegion['city'] = null;
         FM.selectRegion['province'] = null;
@@ -787,7 +783,7 @@ var FM = {
     cityClickCallback:function(obj){
         FM.jSelectEle = $(obj[0]);
         FM.forwardToHistoryFootmark(obj.id,function(){
-            $('#headtitle').text(obj.name);
+            $('.map-middle').text(obj.name);
             //只显示某个市的地图
             FM.mapRegion.options.stateShowAll = false;
             FM.mapRegion.options.stateShowList.push(obj.id);
@@ -926,7 +922,7 @@ var FM = {
                     var nextEle = $(FM.jSelectEle).nextAll();
                     $(preEle).hide();
                     $(nextEle).hide();
-                    $(FM.jSelectEle).attr('fill','#060b1c');
+                    $(FM.jSelectEle).attr('fill','#DBD9DA');
                     $('#cn_merc').vectorMap('set', 'focus', datacode);//重新渲染居中
                     FM.currentLevel = 'specialarea';
                     $('.divbutton').css('display','none');
@@ -943,7 +939,7 @@ var FM = {
                     if(datacode=='hubei'){//湖北地图文件襄樊市改为襄阳市
                         version = '?v=1.0.0';
                     }
-                    FM.loadJS('../../svgmap/data/china/' + datacode + '.js'+version, function(){
+                    FM.loadJS('../../../../gapday/resource/svgmap/data/china/' + datacode + '.js'+version, function(){
                         FM.createSVGMap(datacode);
                     });
                 }
@@ -955,7 +951,7 @@ var FM = {
                 var nextEle = $(eleObj).nextAll();
                 $(preEle).hide();
                 $(nextEle).hide();
-                $(FM.jSelectEle).attr('fill','#060b1c');
+                $(FM.jSelectEle).attr('fill','#DBD9DA');
                 $('#world_merc').vectorMap('set', 'focus', datacode);//重新渲染居中
                 FM.level = 'country';
                 FM.currentLevel = FM.level;
