@@ -54,34 +54,6 @@
                 var datas = data.split(',');
                 FM.locate(datas[0], datas[1], datas[2]);
             });
-
-
-            bridge.registerHandler('closeTipMessage', function (data, responseCallback) {
-                $(".tipMask").hide();
-                $("#tipText").text('');
-            });
-
-
-            bridge.registerHandler('tipMessage', function (data, responseCallback) {
-                var display = $(".tipMask").css('display');
-                if (display == 'none') {
-                    $(".tipMask").show();
-                }
-                $("#tipText").text(data);
-            });
-
-
-            bridge.registerHandler('closeMessageShake', function (data, responseCallback) {
-                if (FM.currentLevel == 'messagetree') {
-                    LFM.removeShakeEvent();
-                }
-            });
-
-            bridge.registerHandler('openMessageShake', function (data, responseCallback) {
-                if (FM.currentLevel == 'messagetree' && window.DeviceMotionEvent) {
-                    window.addEventListener('devicemotion', LFM.deviceMotionHandler, false);
-                }
-            });
         });
 
 
@@ -92,9 +64,6 @@
 
         function callHandlerLightHistoryFootmark() {
             bridgeG.callHandler('lightHistoryFootmark');
-            setTimeout(function () {
-                FM.tipMask()
-            }, 15000);
         }
 
 

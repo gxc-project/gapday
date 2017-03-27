@@ -33,7 +33,7 @@ var FM = {
     currentCity:null,//手机定位当前所在的市地图属性
     init:function(){
         FM.width = $(window).width();
-        FM.height = $(window).height()-50;
+        FM.height = $(window).height() - 44;
         $('#country_merc').width(FM.width).height(FM.height);
         $('#world_merc').width(FM.width).height(FM.height);
         $('#cn_merc').width(FM.width).height(FM.height);
@@ -41,43 +41,15 @@ var FM = {
         if(isself == '1'){//当前用户操作
             $("#lightbutton").bind("click",FM.clickLightButton);   //点亮足迹事件
             $("#lighthistoryfootmark").bind("click",FM.lightHistoryFootmark); //点亮过往足迹事件
-
-            //$('.tipMask').css('display','block');
-            setTimeout(function(){
-                FM.tipMask();
-            },500);
-
         }
 
         $("#goback").bind("click",FM.goBack);
         $("#changeicon").bind("click",FM.changeMapByIcon);
-        $(".tipMask").bind("click",function(){
-            $('.tipMask').hide();
-        });
         $("#backSpan").bind("click",FM.goBack);     //顶部返回按钮
         FM.changeMap();                             //加载地图
         FM.locateLightedHistoryFootmark();          //历史点亮的足迹在地图上渲染
     },
-    //卡片提示
-    tipMask:function (msg,status){
-        var display = $(".tipMask").css('display');
-        if(display == 'none'){
-            if(msg){
-                $(".tipMask").show();
-                $("#tipText").text(msg);
-                if(status){
-                    $(".tipimg").css('display','block');
-                    $(".tipimg_error").css('display','none');
-                }else{
-                    $(".tipimg").css('display','none');
-                    $(".tipimg_error").css('display','block');
-                }
-            }
-        }else{
-            $(".tipMask").hide();
-            $("#tipText").text('');
-        }
-    },
+
     //返回浮点数值
     returnFloat:function (value) {
         var value = Math.round(parseFloat(value) * 100) / 100;
@@ -93,36 +65,13 @@ var FM = {
             return value;
         }
     },
-    //获取用户头像、昵称信息
-    getUserInfo:function(){
-        var aj = $.ajax({
-            url:ctx+"/app/footmark/footmarkleef/getUserInfo.do",
-            data:{
-                userid : userid
-            },
-            type:'get',
-            dataType:'json',
-            success:function(result) {
-                if(result.success){
-                    pic_ctx = result.imgpathurl;
-                    var headimgpath = result.headimgpath.replace('.','_thumb_200.');
-                    userHeadImgPath = pic_ctx+headimgpath;
-                    userNickname = result.nickname;
-                }
-            },
-            error : function(data) {
-            }
-        });
-    },
+
     //点亮过往足迹按钮触发
     lightHistoryFootmark:function(){
         if(!FM.isLightHistoryFootmark){
-            FM.tipMask('正在点亮过往足迹......',true);
             setTimeout(function(){
                 callHandlerLightHistoryFootmark();
             },100);
-        }else{
-            FM.tipMask('您已点亮了过往足迹啦！',false);
         }
     },
 
@@ -171,32 +120,18 @@ var FM = {
                                     FM.currentCity = FM.currentProvince;
                                     FM.currentCityName = FM.currentProvinceName;
                                 }
-                                if(FM.currentCountry == 'CN' && (!FM.currentCity || FM.currentCity == '')){
-                                    FM.tipMask();
-                                    FM.tipMask('无法定位您当前所在的城市！',false);
-                                    return;
-                                }
                                 FM.isLocate = true;
                                 clearInterval(FM.interval);
-                                setTimeout(function(){
-                                    FM.tipMask();
-                                },500);
                                 FM.changeHistoryFootmarkMapColor();
                             }else{
                                 FM.isLocate = false;
-                                FM.tipMask();
-                                FM.tipMask('定位失败!',false);
                             }
                         }else{
                             FM.isLocate = false;
-                            FM.tipMask();
-                            FM.tipMask('定位失败!',false);
                         }
                     },
                     error : function(data) {
                         FM.isLocate = false;
-                        FM.tipMask();
-                        FM.tipMask('定位失败!',false);
                     }
                 });
             });
@@ -210,7 +145,7 @@ var FM = {
         }
         if(FM.isLight){
             clearInterval(FM.interval);
-            return;
+            return false;
         }else{   //#F2CA46 灰色     #DBD9DA 黄色
             if(FM.locateBlinkFlag == 1){
                 $("[data-code='"+FM.currentCountry+"']").attr('fill','#F2CA46');
@@ -336,9 +271,6 @@ var FM = {
                         }
                     }
                 });
-                /*var position = $('#world_merc > .jvectormap-container > svg > g')[0];
-                 position = $(position).attr('transform');
-                 FM.mapTransformPosition['world'] = position;*/
                 var container = $('#world_merc > .jvectormap-container')[0];
                 $(container).height(FM.height);
                 $(container).width(FM.width);
@@ -392,8 +324,6 @@ var FM = {
             $('#changeicon').attr('src',ctx+'/pages/footmark/resource/common/images/china.png');
             FM.currentLevel = 'world';
             $('#footmarkListShowDiv').css('display','none');
-        }else if(FM.level == FM.currentLevel && FM.level == 'city'){
-
         }
         FM.changeHistoryFootmarkMapColor();
         if(FM.currentLevel == 'world' && FM.jMap){
@@ -585,8 +515,7 @@ var FM = {
 
     // 显示省份数据
     loadJS:function(fileName, callMyFun){
-        FM.tipMask('正在加载地图数据......',true);
-        if(FM.provinceContainer.indexOf(fileName) < 0){//如果已经加载过，就不用再加载
+        if(FM.provinceContainer.indexOf(fileName) < 0){
             FM.provinceContainer.push(fileName);
             var otherJScipt = document.createElement("script");
             otherJScipt.setAttribute("type", "text/javascript");
@@ -595,11 +524,9 @@ var FM = {
             otherJScipt.onload = function () {
                 otherJScipt.onload = null;
                 callMyFun();
-                FM.tipMask();
             };
         }else{
             callMyFun();
-            FM.tipMask();
         }
     }
 };
