@@ -203,6 +203,12 @@ var FM = {
                                 '1':'bank'
                             }
                         }]
+                    },
+                    backgroundColor: 'transparent',
+                    regionStyle: {
+                        initial: {
+                            fill: '#DBD9DA'
+                        }
                     }
                 });
                 var container = $('#cn_merc > .jvectormap-container')[0];
