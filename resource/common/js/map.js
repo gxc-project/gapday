@@ -1,4 +1,28 @@
-//地图操作对象
+var bridgeG,ctx = 'http://www.qingnianlvxing.com:80/lkapp';
+function clickCallback(event) {
+    if (event.type == 'mouseover') {  //点击地图区域进入下一级回调处理
+        var areaname = event.target.areaname;
+        $('.map-middle').text(areaname);
+        FM.changeHistoryFootmarkMapColor();   //add by liujl 2016-3-11   解决部分手机点击地图后变灰不能进去下级地图bug
+    } else if (event.type == 'mouseout') {
+        if (FM.currentLevel == 'world') {
+            $('.map-middle').text('世界');
+        } else if (FM.currentLevel == 'china') {
+            $('.map-middle').text('中国');
+        }
+        //改变地图颜色
+        FM.changeHistoryFootmarkMapColor();
+    } else {
+        FM.clickCallback(event);
+    }
+}
+$(function () {
+    FM.init();    //足迹地图初始化
+    $('.map-all').height($(window).height() - 44);
+});
+
+
+//地图操作对象   控制地图变化的总体对象
 var FM = {
     width:300,
     height:600,
@@ -9,6 +33,7 @@ var FM = {
     mapRegion:null,//svgmap省市对象
     jMap:null,//jvectormap世界地图对象
     jCNMap:null,//jvectormap中国地图对象
+    iconmap:null,//jvectormap icon
     lightIcon:1,//点亮足迹的图片编号
     locateBlinkFlag:1,//定位闪烁标识
     lightHistoryFootmarkTip:[],
@@ -22,13 +47,10 @@ var FM = {
     interval:0,//点亮足迹图片切换
     provinceContainer:[],//已加载的省地图数据
     historyFootmark:[],//已点亮的历史足迹
-    currentCountryName:null,//手机定位当前所在的国家名称
-    currentProvinceName:null,//手机定位当前所在的省名称
-    currentCityName:null,//手机定位当前所在的市名称
-    currentCityCode:null,//手机定位当前所在的市编码
-    currentCountry:null,//手机定位当前所在的国家地图属性
-    currentProvince:null,//手机定位当前所在的省地图属性
-    currentCity:null,//手机定位当前所在的市地图属性
+    plants:[
+        {latLng:[116,39]}, {latLng:[110,41]},{latLng:[87.8,43.7]},{latLng:[126.8,45.7]}, {latLng:[123.5,41.7]}, {latLng:[91.3,29.7]},{latLng:[120,30.2]},
+        {latLng:[106,29]},{latLng:[109.1,34.5]}, {latLng:[110,20]}, {latLng:[102,25]}, {latLng:[-77,38]}
+    ],
     init:function(){
         FM.width = $(window).width();
         FM.height = $(window).height() - 44;
@@ -39,25 +61,9 @@ var FM = {
 
         $("#goback").bind("click",FM.goBack);
         $("#changeicon").bind("click",FM.changeMapByIcon);
-        $("#backSpan").bind("click",FM.goBack);     //顶部返回按钮
-        FM.changeMap();                             //加载地图
-        FM.locateLightedHistoryFootmark();          //历史点亮的足迹在地图上渲染
-    },
-
-    //返回浮点数值
-    returnFloat:function (value) {
-        var value = Math.round(parseFloat(value) * 100) / 100;
-        var xsd = value.toString().split(".");
-        if (xsd.length == 1) {
-            value = value.toString() + ".00";
-            return value;
-        }
-        if (xsd.length > 1) {
-            if (xsd[1].length < 2) {
-                value = value.toString() + "0";
-            }
-            return value;
-        }
+        $("#backSpan").bind("click",FM.goBack);   //顶部返回按钮
+        FM.changeMap();                              //加载地图
+        FM.locateLightedHistoryFootmark();           //历史点亮的足迹在地图上渲染
     },
 
     //读取  过往已点亮的足迹
@@ -104,9 +110,8 @@ var FM = {
         var city = FM.selectRegion['city'];
 
         if(FM.currentLevel == 'world'){//首页
-            goBackToHomePage();
+            return false;
         }else{
-            $('.divbutton').css('display','none');
             $('#shareMapPageDiv').css('display','block');
             if(FM.level == 'city'){//市级页面
                 $('#province').css('display','block');
@@ -133,7 +138,6 @@ var FM = {
         $('#cn_merc').css('display','none');
         $('#world_merc').css('display','none');
         $('#city').css('display','none');
-        $('.divbutton').css('display','none');
         $('#changeicon').css('display','block');
         $(FM.jSelectEle).attr('fill','#DBD9DA');
         clearInterval(FM.interval);
@@ -141,7 +145,7 @@ var FM = {
         /*debugger;*/
         if(FM.level == 'world'){
             $('#world_merc').css('display','block');
-            $('#changeicon').attr('src',ctx+'/pages/footmark/resource/common/images/china.png');
+            $('#changeicon').attr('src',ctx + '/pages/footmark/resource/common/images/china.png');
             var eleLen = $("div#world_merc > .jvectormap-container").length;
             if(eleLen == 0){
                 FM.jMap = $('#world_merc').vectorMap({//加载世界地图
@@ -169,17 +173,36 @@ var FM = {
             }
             FM.level = 'world';
             $('#cn_merc').css('display','block');
-            $('#changeicon').attr('src',ctx+'/pages/footmark/resource/common/images/world.png');
+            $('#changeicon').attr('src',ctx + '/pages/footmark/resource/common/images/world.png');
             var eleLen = $("div#cn_merc > .jvectormap-container").length;
-            //FM.interval = setInterval("FM.locateBlink()",500);
             if(eleLen == 0){
-                FM.jCNMap = $('#cn_merc').vectorMap({//加载中国地图
+                /*FM.jCNMap = $('#cn_merc').vectorMap({//加载中国地图
                     map: 'cn_merc',
                     backgroundColor: 'transparent',
                     regionStyle: {
                         initial: {
                             fill: '#DBD9DA'
                         }
+                    }
+                });*/
+                FM.iconmap = new jvm.Map({
+                    container: $('#cn_merc'),
+                    map: 'cn_merc',
+                    markers: FM.plants,
+                    series: {
+                        markers: [{
+                            attribute: 'image',
+                            scale: {
+                                bank: 'gapday/images/icon.png'
+                            },
+                            values:{
+                                '0':'bank',
+                                '2':'bank',
+                                '3':'bank',
+                                '4':'bank',
+                                '1':'bank'
+                            }
+                        }]
                     }
                 });
                 var container = $('#cn_merc > .jvectormap-container')[0];
@@ -193,7 +216,6 @@ var FM = {
                 $(nextEle).show();
             }
             FM.currentLevel = 'china';
-            $('#footmarkListShowDiv').css('display','none');
         }else if(FM.level == 'country'){
             $('#world_merc').css('display','block');
             FM.level = 'china';
@@ -201,9 +223,8 @@ var FM = {
             var nextEle = $(FM.jSelectEle).nextAll();
             $(preEle).show();
             $(nextEle).show();
-            $('#changeicon').attr('src',ctx+'/pages/footmark/resource/common/images/china.png');
+            $('#changeicon').attr('src',ctx + '/pages/footmark/resource/common/images/china.png');
             FM.currentLevel = 'world';
-            $('#footmarkListShowDiv').css('display','none');
         }
         FM.changeHistoryFootmarkMapColor();
         if(FM.currentLevel == 'world' && FM.jMap){
@@ -231,13 +252,8 @@ var FM = {
             FM.currentLevel = FM.level;
             clearInterval(FM.interval);
             $(FM.jSelectEle).attr('fill','#DBD9DA');
-            $('.divbutton').css('display','none');
             FM.mapRegion.panZoom.zoomIn(3);//地图放大三倍
         });
-
-        $("#poiSummaryNumDiv").css({'display':'none'});   //mapbox中pop 弹窗
-        $("#createPoiAddressDiv").css('display','none');  //创建poi 地点
-        $("#shareMapPageDiv").css({'display':'block'});   //分享页面按钮
     },
 
     //创建省级地图
@@ -320,11 +336,10 @@ var FM = {
                     $(FM.jSelectEle).attr('fill','#DBD9DA');
                     $('#cn_merc').vectorMap('set', 'focus', datacode);//重新渲染居中
                     FM.currentLevel = 'specialarea';
-                    $('.divbutton').css('display','none');
 
                 }else{
                     var version = '';
-                    if(datacode=='hubei'){//湖北地图文件襄樊市改为襄阳市
+                    if(datacode == 'hubei'){//湖北地图文件襄樊市改为襄阳市
                         version = '?v=1.0.0';
                     }
                     FM.loadJS('../../../../gapday/resource/svgmap/data/china/' + datacode + '.js'+version, function(){
@@ -344,12 +359,7 @@ var FM = {
                 FM.level = 'country';
                 FM.currentLevel = FM.level;
                 $('#changeicon').attr('src',ctx+'/pages/footmark/resource/common/images/world.png');
-                $('.divbutton').css('display','none');
 
-                $("#poiSummaryNumDiv").css({'display':'none'}); //mapbox中pop 弹窗 隐藏
-                $("#createPoiAddressDiv").css('display','none');  //创建poi 地点
-
-                $('#footmarkListShowDiv').css('display','none');   //足迹列表 按钮
             }
         });
     },
