@@ -33,17 +33,9 @@ var FM = {
     mapRegion:null,//svgmap省市对象
     jMap:null,//jvectormap世界地图对象
     jCNMap:null,//jvectormap中国地图对象
-    iconmap:null,//jvectormap icon
-    lightIcon:1,//点亮足迹的图片编号
-    locateBlinkFlag:1,//定位闪烁标识
     lightHistoryFootmarkTip:[],
-    isLocate:false,//是否手机定位
-    mapTransformPosition:[],//地图初始加载的位置
-    lightedCountryCityMsg:[],//已点亮的国家或城市信息
-    lightedCountryCity:'',
     selectRegionName:'',//当前点击的地图区域名称
     selectRegion:[],//当前点击的地图区域名称
-    userHeadimg:'default.png',
     interval:0,//点亮足迹图片切换
     provinceContainer:[],//已加载的省地图数据
     historyFootmark:[],//已点亮的历史足迹
@@ -286,7 +278,6 @@ var FM = {
         $('#world_merc').css('display','none');
         $('#changeicon').attr('src',ctx+'/pages/footmark/resource/common/images/china.png');
         FM.changeHistoryFootmarkMapColor();
-
     },
 
     forwardToHistoryFootmark:function(datacode,callback){
@@ -314,6 +305,10 @@ var FM = {
     //当点击jvectormap地图回调方法
     clickCallback:function(event){
         var eleObj = $(event.target);
+        if($(eleObj).attr('class') == 'jvectormap-marker jvectormap-element'){
+            $('.map-middle').text(FM.selectRegionName);
+            return false;
+        }
         var datacode = $(eleObj).attr('data-code');
         FM.jSelectEle = eleObj;
         var areaname = event.target.areaname;
@@ -331,7 +326,6 @@ var FM = {
                     $(FM.jSelectEle).attr('fill','#DBD9DA');
                     $('#cn_merc').vectorMap('set', 'focus', datacode);//重新渲染居中
                     FM.currentLevel = 'specialarea';
-
                 }else{
                     var version = '';
                     if(datacode == 'hubei'){//湖北地图文件襄樊市改为襄阳市
