@@ -48,8 +48,8 @@ var FM = {
     provinceContainer:[],//已加载的省地图数据
     historyFootmark:[],//已点亮的历史足迹
     plants:[
-        {latLng:[116,39]}, {latLng:[110,41]},{latLng:[87.8,43.7]},{latLng:[126.8,45.7]}, {latLng:[123.5,41.7]}, {latLng:[91.3,29.7]},{latLng:[120,30.2]},
-        {latLng:[106,29]},{latLng:[109.1,34.5]}, {latLng:[110,20]}, {latLng:[102,25]}, {latLng:[-77,38]}
+        {latLng:[39,116]}, {latLng:[41,110]},{latLng:[43.7,87.8]},{latLng:[45.7,126.8]}, {latLng:[41.7,123.5]}, {latLng:[29.7,91.3]},{latLng:[30.2,120]},
+        {latLng:[29,106]},{latLng:[34.5,109.1]}, {latLng:[20,110]}, {latLng:[25,102]}, {latLng:[38,-77]}
     ],
     init:function(){
         FM.width = $(window).width();
@@ -176,40 +176,29 @@ var FM = {
             $('#changeicon').attr('src',ctx + '/pages/footmark/resource/common/images/world.png');
             var eleLen = $("div#cn_merc > .jvectormap-container").length;
             if(eleLen == 0){
-                /*FM.jCNMap = $('#cn_merc').vectorMap({//加载中国地图
+                FM.jCNMap = $('#cn_merc').vectorMap({//加载中国地图
                     map: 'cn_merc',
                     backgroundColor: 'transparent',
                     regionStyle: {
                         initial: {
                             fill: '#DBD9DA'
                         }
-                    }
-                });*/
-                FM.iconmap = new jvm.Map({
-                    container: $('#cn_merc'),
-                    map: 'cn_merc',
+                    },
                     markers: FM.plants,
+                    labels:{
+                        offsets: function (index) {
+                            return [0, 8];
+                        }
+                    },
                     series: {
                         markers: [{
-                            attribute: 'image',
-                            scale: {
-                                bank: 'gapday/images/icon.png'
-                            },
-                            values:{
-                                '0':'bank',
-                                '2':'bank',
-                                '3':'bank',
-                                '4':'bank',
-                                '1':'bank'
-                            }
+                             attribute: 'image',
+                             scale: {
+                                'bank': 'images/icon.png'
+                             },
+                             values:FM.plants.reduce(function(p, c, i){ p[i] = 'bank'; return p }, {})
                         }]
-                    },
-                    backgroundColor: 'transparent',
-                    regionStyle: {
-                        initial: {
-                            fill: '#DBD9DA'
-                        }
-                    }
+                     }
                 });
                 var container = $('#cn_merc > .jvectormap-container')[0];
                 $(container).height(FM.height);
