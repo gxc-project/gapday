@@ -306,7 +306,7 @@ var FM = {
     clickCallback:function(event){
         var eleObj = $(event.target);
         if($(eleObj).attr('class') == 'jvectormap-marker jvectormap-element'){
-            $('.map-middle').text(FM.selectRegionName);
+            $('.map-middle').text((FM.selectRegion.country == 'CN'?'中国':'世界') || FM.selectRegion.province);
             return false;
         }
         var datacode = $(eleObj).attr('data-code');
